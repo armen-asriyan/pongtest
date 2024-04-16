@@ -1,0 +1,23 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #1B1B32;
+    color: #F5F6F7;
+    font-size: 20px;
+    font-family: "Press Start 2P", system-ui;
+    text-align: center;
+}
+
+.title h1 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+canvas {
+    background-color: black;
+    border: 1px solid #F5F6F7;
+}
