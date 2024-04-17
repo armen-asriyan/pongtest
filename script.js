@@ -21,28 +21,33 @@ let opponentPaddleY = (canvas.height - paddleHeight) / 2;
 let opponentPaddleX = paddleWidth;  // Place it on the right side
 
 // Ball variables
-let ballX = (canvas.width / 2) + 17; // Ball default x (horizontal) position
-let ballY = (canvas.height / 2); // Ball default y (vertical) position
 let ballWidth = 17; // Ball default width
 let ballHeight = 17; // Ball default height
-let ballSpeedX = 5;
-let ballSpeedY = 4;
+let ballSpeedX = 5; // Ball x movement speed
+let ballSpeedY = 4; // Ball y movement speed
+let ballX = (canvas.width / 2) + ballWidth; // Ball default x (horizontal) position
+let ballY = (canvas.height / 2); // Ball default y (vertical) position
 
+
+// Mouse y position
 let mouseY;
 
-// Points variables
+const canvasTopBorder = 10;
+const canvasBottomBorder = 560;
+
+// Points variables 
 let playerPoints = 10;
 let opponentPoints = 10;
+const winNumber = 11;
 
-let gameEnded = false;
-
-document.addEventListener("keydown", resetGame, false);
-
-canvas.addEventListener('click', startGame);
 
 drawPreGame();
 
+
 function drawPreGame() {
+    // Listen to whenever user clicks on the canvas
+    canvas.addEventListener('click', startGame);
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     console.log("Canvas has been cleared");
@@ -56,10 +61,11 @@ function drawPreGame() {
 }
 
 
+// Start gameLoop 
 function startGame() {
     gameLoop();
-    canvas.removeEventListener('mousedown', startGame);
-    canvas.removeEventListener('touchstart', startGame);
+    // Listen to whenever user press Escape 
+    document.addEventListener("keydown", resetGame, false);
     canvas.addEventListener("mousemove", onMouseMove, false);
 }
 
@@ -77,18 +83,18 @@ function onMouseMove(mouseEvent) {
     paddleY = mouseY;
     console.log("Y position of paddle is: ", paddleY);
 
-    if (mouseY > 560) {
+    if (mouseY > canvasBottomBorder) {
         console.log("Paddle reached the bottom");
-        paddleY = 560;
+        paddleY = canvasBottomBorder;
     }
-    else if (mouseY < 10) {
+    else if (mouseY < canvasTopBorder) {
         console.log("Paddle reached the top");
-        paddleY = 10;
+        paddleY = canvasTopBorder;
     }
 }
 
 function drawGame() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
 
     canvas.removeEventListener('click', startGame); // Remove click input after starting the game
     document.getElementById('gameArea').style.cursor = "none"; // Hide the cursor
@@ -98,65 +104,38 @@ function drawGame() {
     ctx.fillRect(paddleX, paddleY, paddleWidth, paddleHeight);
 
     // Draw the opponent paddle
-    ctx.fillStyle = "white";
     ctx.fillRect(opponentPaddleX, opponentPaddleY, paddleWidth, paddleHeight);
 
-    // Opponent paddle AI
-    paddleAI();
-
     // Draw the ball
-    ctx.fillStyle = "white";
     ctx.fillRect(ballX, ballY, ballWidth, ballHeight);
 
-
-    // Draw the dividers
-    for (let i = 0; i < canvas.height; i++) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(dividerX, dividerY + i * (dividerHeight + dividerOffset), dividerWidth, dividerHeight);
-    }
-
-    ballBounce();
-
-    // Draw points
-
     // Player Points
-    ctx.fillStyle = "white";
     ctx.font = "150px 'Digital-7 Mono'";
     ctx.textAlign = "center";
     ctx.fillText(playerPoints, canvas.width - 500, 120);
 
-    // Opponent Points
-    ctx.fillStyle = "white";
-    ctx.font = "150px 'Digital-7 Mono'";
-    ctx.textAlign = "center";
+    // Opponent Points 
     ctx.fillText(opponentPoints, 500, 120);
 
-    // Game result function
-    gameResult();
-
+    drawDividers();
 }
 
 function ballBounce() {
     ballX += ballSpeedX;
     ballY += ballSpeedY;
 
-
     // Bounce from top and bottom
-    if ((ballY + ballSpeedY) + 17 > canvas.height) {
+    if ((ballY + ballSpeedY) + ballHeight > canvas.height) {
+        ballSpeedY = -ballSpeedY;
+    } else if ((ballY + ballSpeedY) < 0) {
         ballSpeedY = -ballSpeedY;
     }
-    else if ((ballY + ballSpeedY) + 17 < 0) {
-        ballSpeedY = -ballSpeedY;
-    }
-
-    // Point losing funciton
-    losePoint();
 
     // Check collision with paddle
     if (ballX + ballWidth > paddleX && ballX < paddleX + paddleWidth) {
         if (ballY + ballHeight > paddleY && ballY < paddleY + paddleHeight) {
             // Collision detected, reverse ball's x-direction
-            ballSpeedX = - 12;
+            ballSpeedX = -12;
             console.log("The ball touched the paddle");
         }
     }
@@ -166,49 +145,37 @@ function ballBounce() {
         if (ballY + ballHeight > opponentPaddleY && ballY < opponentPaddleY + paddleHeight) {
             // Collision detected, reverse ball's x-direction and adjust y-direction based on contact point
             ballSpeedX = -ballSpeedX;
-            ballSpeedY *= 1.05; // Increase speed slightly after each hit (optional)
-            const relativeImpact = (ballY - (opponentPaddleY + paddleHeight / 2)) / (paddleHeight / 2);
-            ballSpeedY *= relativeImpact;  // Adjust y-speed based on where the ball hits the paddle
+            ballSpeedY *= 1.05; // Increase speed slightly after each hit 
             console.log("The ball touched the opponent paddle");
         }
     }
-
-
 }
 
 
-function gameResult() {
-    if (playerPoints === 11) {
-        gameEnded = true;
-        ctx.fillStyle = "white";
-        ctx.font = "150px 'Digital-7 Mono'";
-        ctx.textAlign = "center";
+function updateGameState() {
+    if (playerPoints === winNumber || opponentPoints === winNumber) {
+        isGameEnded = true;
+        ballSpeedX = 0;
+        ballSpeedY = 0;
+        ballX = (canvas.width / 2);
+        canvas.removeEventListener("mousemove", onMouseMove, false);
+    }
+}
+
+function renderGameResult() {
+    if (playerPoints === winNumber) {
         ctx.fillText("winner", canvas.height + 250, 400);
         ctx.fillText("loser", canvas.height / 2, 400);
-        ctx.font = "italic 30px 'Press Start 2P'";
-        ctx.fillText("Press escape", canvas.height + 250, 600);
-        ballSpeedX = 0;
-        ballSpeedY = 0;
-        canvas.removeEventListener("mousemove", onMouseMove, false);
-        document.getElementById('gameArea').style.cursor = "auto";
-    }
-    if (opponentPoints === 11) {
-        gameEnded = true;
-        ctx.fillStyle = "white";
-        ctx.font = "150px 'Digital-7 Mono'";
-        ctx.textAlign = "center";
+    } else if (opponentPoints === winNumber) {
         ctx.fillText("loser", canvas.height + 250, 400);
         ctx.fillText("winner", canvas.height / 2, 400);
-        ctx.font = "italic 30px 'Press Start 2P'";
-        ctx.fillText("Press escape", canvas.height + 250, 600);
-        ballSpeedX = 0;
-        ballSpeedY = 0;
-        document.getElementById('gameArea').style.cursor = "auto";
     }
+    ctx.font = "italic 30px 'Press Start 2P'";
+    ctx.fillText("Press escape", canvas.height + 250, 600);
 }
 
 function resetGame(event) {
-    if (event.key === "Escape" && gameEnded) {
+    if (event.key === "Escape" && isGameEnded) {
         playerPoints = 0;
         opponentPoints = 0;
         ballX = canvas.width / 2;
@@ -216,13 +183,13 @@ function resetGame(event) {
         ballSpeedX = 5;
         ballSpeedY = 4;
         canvas.addEventListener("mousemove", onMouseMove, false);
-        gameEnded = false;
+        isGameEnded = false;
     }
 }
 
 function losePoint() {
 
-    if ((ballX + ballSpeedX) + 17 > canvas.width) {
+    if ((ballX + ballSpeedX) + ballWidth > canvas.width) {
         //ballSpeedX = -ballSpeedX;
         console.log("Player lost a point");
         opponentPoints++;
@@ -236,7 +203,7 @@ function losePoint() {
         ballX = (canvas.width / 2);
 
     }
-    else if ((ballX + ballSpeedX) + 17 < 0) {
+    else if ((ballX + ballSpeedX) + ballWidth < 0) {
         console.log("Opponent lost a point");
         playerPoints++;
 
@@ -249,13 +216,42 @@ function losePoint() {
     }
 }
 
+function drawDividers() {
+
+    // LOOP PROBLEM !!!
+
+    // Draw the divider
+    for (let i = 0; i < canvas.height; i++) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(dividerX, dividerY + i * (dividerHeight + dividerOffset), dividerWidth, dividerHeight);
+        // console.log("Divider is drawn");
+    }
+}
+
+
 
 function paddleAI() {
-
-
+    // TO CODE !!!
 }
+
 
 function gameLoop() {
     requestAnimationFrame(gameLoop);
+
+    // Update game state
+    updateGameState();
+
+    // Render game elements
     drawGame();
+
+    // Render game results
+    renderGameResult();
+
+    //Ball physics
+    ballBounce();
+    // Paddle AI
+    paddleAI();
+    // Point losing function
+    losePoint();
+
 }
