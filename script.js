@@ -166,12 +166,15 @@ function renderGameResult() {
     if (playerPoints === winNumber) {
         ctx.fillText("winner", canvas.height + 250, 400);
         ctx.fillText("loser", canvas.height / 2, 400);
+        ctx.font = "italic 30px 'Press Start 2P'";
+        ctx.fillText("Press escape", canvas.height + 250, 600);
     } else if (opponentPoints === winNumber) {
         ctx.fillText("loser", canvas.height + 250, 400);
         ctx.fillText("winner", canvas.height / 2, 400);
         ctx.font = "italic 30px 'Press Start 2P'";
         ctx.fillText("Press escape", canvas.height + 250, 600);
     }
+
 }
 
 function resetGame(event) {
