@@ -1,1 +1,1 @@
-Pong game using HTML, CSS and JavaScript
+Pong game using HTML, CSS and JavaScript (WORK IN PROGRESS)
